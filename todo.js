@@ -1,6 +1,9 @@
 
 // criação do array de tarefas, array que consulta no local storage se existem tarefas
 const tarefasArray = JSON.parse(localStorage.getItem("tarefas")) || [];
+const cancelarTarefaModal = document.querySelector(".cancelarAtividade");
+let divSelecionada = null;
+let chaveSelecionada = "";
 
 // função que imprime as tarefas do array de tarefas
 function showTasks(clearTasks = false){
@@ -14,12 +17,16 @@ function showTasks(clearTasks = false){
         tarefasArray.forEach((tarefa) =>{
         // verifica se a tarefa está com o parametro cumprida como não
         if(tarefa.cumprida=="nao"){
-          listaDiv.innerHTML = listaDiv.innerHTML + `<li id="${tarefa.tarefa}" name="lista"><input class = "caixa" type="checkbox" id="${tarefa.tarefa}"></input>${tarefa.tarefa}<span class="close" id="${tarefa.tarefa}">x</span></li><br>`;
+          listaDiv.innerHTML = listaDiv.innerHTML + `<li id="${tarefa.tarefa}" name="lista">
+                                                    <input class = "caixa" type="checkbox" id="${tarefa.tarefa}"></input>${tarefa.tarefa} - (Adicionada em: ${tarefa.data})
+                                                    <span class="close" id="${tarefa.tarefa}">x</span></li><br>`;
           closeButtonActivity();
         }
         // se a tarefa estiver com o parametro cumprida como sim, mudamos a classe da lista para a classe com efeitos de cumprida
         if(tarefa.cumprida=="sim"){
-          listaDiv.innerHTML = listaDiv.innerHTML + `<li id="${tarefa.tarefa}" name="lista" class="checked"><input class = "caixa" type="checkbox" id="${tarefa.tarefa}" checked></input>${tarefa.tarefa}<span class="close" id="${tarefa.tarefa}">x</span></li><br>`;
+          listaDiv.innerHTML = listaDiv.innerHTML + `<li id="${tarefa.tarefa}" name="lista" class="checked">
+                                                    <input class = "caixa" type="checkbox" id="${tarefa.tarefa}" checked></input>${tarefa.tarefa} - (Adicionada em: ${tarefa.data})
+                                                    <span class="close" id="${tarefa.tarefa}">x</span></li><br>`;
           closeButtonActivity();
           }
       });    
@@ -37,19 +44,12 @@ function closeButtonActivity(){
     // roda um laço para add as funções nos botões
     for (i = 0; i < close.length; i++) {
       close[i].onclick = function() {
-      // se determinado botão for clicado ele apaga o display dele  
-      var div = this.parentElement;
-      div.style.display = "none";
-        // nesse laço verificamos qual tarefa corresponde ao id do botão clicado
-        for(var i =0;i<tarefasArray.length;i++){
-            if(tarefasArray[i].tarefa== this.id){
-              // ao encontrar a tarefa, ela é removida do array e o novo array sem a tarefa é carregado no local storage
-               tarefasArray.splice(i,1);
-               localStorage.setItem("tarefas",JSON.stringify(tarefasArray));
-               // a função de mostrar as tarefas é chamada novamente, com o parametro true para apagar tudo e imprimir novamente
-               showTasks(true);
-            }
-        }    
+
+      cancelarTarefaModal.style.display= "block";  
+      divSelecionada = this.parentElement;
+      chaveSelecionada = this.id;
+      document.getElementById("mensgCancelar").textContent=`⚠️ Deseja cancelar a atividade "${chaveSelecionada}" ?`;
+      
       }
     }
 }
@@ -84,6 +84,32 @@ list.addEventListener('click', function(event) {
   }
 }, false);
 
+//função para confirmar o cancelamento da tarefa
+function cancelarSim(){
+      
+      divSelecionada.style.display = "none";
+      cancelarTarefaModal.style.display="none";
+        // nesse laço verificamos qual tarefa corresponde ao id do botão clicado
+        for(var i =0;i<tarefasArray.length;i++){
+            if(tarefasArray[i].tarefa== chaveSelecionada){
+              // ao encontrar a tarefa, ela é removida do array e o novo array sem a tarefa é carregado no local storage
+               tarefasArray.splice(i,1);
+               localStorage.setItem("tarefas",JSON.stringify(tarefasArray));
+               // a função de mostrar as tarefas é chamada novamente, com o parametro true para apagar tudo e imprimir novamente
+               showTasks(true);
+               divSelecionada = null;
+               chaveSelecionada = "";
+            }
+        }   
+}
+// função parar deistir de cancelar tarefa
+function cancelarNao(){
+  cancelarTarefaModal.style.display="none";
+  divSelecionada = null;
+  chaveSelecionada = "";
+}
+
+
 
 // Função para criação de um novo item de tarefa, essa função é chamado ao clicar no botão "Adicionar tarefa"
 function novaTarefa() {
@@ -96,11 +122,12 @@ function novaTarefa() {
   let  tarefa ={};
   tarefa.tarefa = inputValue;
   tarefa.cumprida = "nao";
+  tarefa.data = `${new Date().getDate()}/${new Date().getMonth()+1}/${new Date().getFullYear()}`;
 
   li.appendChild(t);
       // verifica se foi digitada alguma coisa no input ao clicar no botao adicionar, senão foi apresenta a mensagem abaixo
       if (inputValue === '') {
-         alerta.innerHTML ="Você deve inserir uma tarefa";
+         alerta.innerHTML ="⚠️ Você deve inserir uma tarefa";
       } else {
          document.getElementById("lista-tarefas").appendChild(li);
          alerta.innerHTML ="";
